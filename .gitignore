@@ -1,0 +1,6 @@
+.dist/
+vcpkg_installed/
+.DS_Store
+
+# Holds the Immich API key; copy app_config.example.yml to create it
+assets/app_config.yml

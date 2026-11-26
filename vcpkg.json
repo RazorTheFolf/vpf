@@ -1,0 +1,21 @@
+{
+  "name": "vpf",
+  "version": "0.1.0",
+  "dependencies": [
+    "cpr",
+    "nlohmann-json",
+    "paho-mqttpp3",
+    {
+      "name": "sdl3",
+      "default-features": false
+    },
+    {
+      "name": "sdl3-image",
+      "features": [
+        "jpeg",
+        "png"
+      ]
+    },
+    "yaml-cpp"
+  ]
+}
