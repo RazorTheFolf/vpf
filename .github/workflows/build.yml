@@ -1,0 +1,42 @@
+name: Build Pi package
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Native arm64, no emulation
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same environment as `make pi`
+      - name: Build image
+        run: docker build -t vpf-pi-builder -f docker/pi-build.Dockerfile docker
+
+      # Built dependencies, so only the first run is slow
+      - uses: actions/cache@v4
+        with:
+          path: ~/vcpkg-cache
+          key: vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'triplets/**', 'docker/**') }}
+          restore-keys: vcpkg-
+
+      - name: Build
+        run: |
+          mkdir -p ~/vcpkg-cache
+          docker run --rm -v "$PWD":/src -v ~/vcpkg-cache:/cache/vcpkg vpf-pi-builder \
+            sh -c "cmake --preset pi && cmake --build --preset pi"
+          # Container runs as root, the cache step needs to read it
+          sudo chown -R "$USER" ~/vcpkg-cache .dist
+
+      - name: Package
+        run: |
+          mkdir vpf
+          cp .dist/pi/vpf vpf/
+          cp assets/app_config.example.yml vpf/
+          tar czf vpf-arm64-${GITHUB_SHA::7}.tar.gz vpf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vpf-arm64-${{ github.sha }}
+          path: vpf-arm64-*.tar.gz
