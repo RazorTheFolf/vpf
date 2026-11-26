@@ -21,21 +21,18 @@ struct Config
     int windowHeight = 800;
 
     // Slideshow
-    std::string photoSource = "local";  // "local" (the assets folder) or "immich"
-    int slideDuration = 5; // seconds (int: yaml-cpp reads Uint8 as a character)
+    std::string photoSource = "local";  // local | immich
+    int slideDuration = 5; // Seconds, int since yaml-cpp reads Uint8 as a char
     std::string placeholderText = "Please wait...";
     float placeholderTextScale = 2.0f;
 
-    // Immich (used when photoSource is "immich")
-    std::string immichUrl;  // e.g. "http://192.168.1.10:2283"
+    // Immich
+    std::string immichUrl;
     std::string immichAPIKey;
     std::string immichAlbumId;
 };
 
-// Reads the YAML file into the global config. Call once, at the start of App::init().
-// Missing keys (or a missing file) keep the defaults above.
+// Missing keys keep the defaults
 void LoadConfig(const std::string& path);
 
-// The global config, read-only. Usable from any file that includes config.h:
-//   GetConfig().slideDuration
 const Config& GetConfig();

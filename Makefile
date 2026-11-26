@@ -1,5 +1,4 @@
-# Shortcuts for building and running the photo frame from the terminal.
-# Wraps the CMake presets in CMakePresets.json (debug -> .dist/debug, release -> .dist/release).
+# Shortcuts around the CMake presets
 #
 #   make            build Debug (same as `make debug`)
 #   make run        build Debug, then run it
@@ -17,20 +16,17 @@ DEBUG_DIR  := $(DIST)/debug
 RELEASE_DIR:= $(DIST)/release
 PI_DIR     := $(DIST)/pi
 
-# Raspberry Pi: override on the command line, e.g. `make deploy PI_HOST=razor@frame.local`
+# Override with `make deploy PI_HOST=...`
 PI_HOST    ?= user@192.168.2.32
 PI_PATH    ?= ~/vpf
 PI_IMAGE   := vpf-pi-builder
 
-# Not files: always run these targets when asked.
 .PHONY: all debug release run run-release clean fresh help check-tools pi pi-image deploy
 
 all: debug
 
-# ---- Configure (only when needed) ----
-# build.ninja is created by the first configure. Making it a file target means
-# `make` configures once, then skips straight to building. After that, CMake
-# re-configures by itself when CMakeLists.txt changes.
+# ---- Configure ----
+# Only once, cmake reconfigures itself after
 $(DEBUG_DIR)/build.ninja: | check-tools
 	cmake --preset debug
 
@@ -38,7 +34,6 @@ $(RELEASE_DIR)/build.ninja: | check-tools
 	cmake --preset release
 
 # ---- Build ----
-# assets/ is synced by CMake itself (sync_assets target), so CLion builds get it too.
 debug: $(DEBUG_DIR)/build.ninja
 	cmake --build --preset debug
 
@@ -59,12 +54,11 @@ clean:
 fresh: clean debug
 
 # ---- Raspberry Pi (Docker) ----
-# The image only rebuilds when the Dockerfile changes (Docker caches it).
+# Only rebuilds when the Dockerfile changes
 pi-image:
 	docker build --platform linux/arm64 -t $(PI_IMAGE) -f docker/pi-build.Dockerfile docker
 
-# Two named volumes keep vcpkg's downloads and built packages between runs:
-# the first `make pi` builds every dependency (slow), later ones reuse them.
+# Volumes cache vcpkg between runs, first build is slow
 pi: pi-image
 	docker run --rm --platform linux/arm64 \
 		-v "$(CURDIR)":/src \
@@ -73,8 +67,7 @@ pi: pi-image
 		$(PI_IMAGE) \
 		sh -c "cmake --preset pi && cmake --build --preset pi"
 
-# Copies the executable and assets/ to the Pi. --delete removes files on the Pi
-# that no longer exist here (e.g. a photo you deleted), so the Pi matches exactly.
+# --delete keeps the Pi an exact copy
 deploy: pi
 	ssh $(PI_HOST) "mkdir -p $(PI_PATH)"
 	rsync -av --delete $(PI_DIR)/$(APP) $(PI_DIR)/assets $(PI_HOST):$(PI_PATH)/

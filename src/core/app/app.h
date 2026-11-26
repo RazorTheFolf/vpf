@@ -1,9 +1,6 @@
 //
 // Created by Razor on 14/10/2026.
 //
-// The application: sets up SDL, owns the features, and runs each frame.
-// main.cpp only forwards SDL's four callbacks to these methods.
-//
 
 #pragma once
 #include <SDL3/SDL_events.h>
@@ -20,6 +17,6 @@ public:
   void quit();                                 // once at shutdown
 
 private:
-  AppContext ctx;      // shared state (window, renderer, display info)
-  Slideshow slideshow; // features
+  AppContext ctx;
+  Slideshow slideshow;
 };

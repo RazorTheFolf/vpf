@@ -1,5 +1,4 @@
-# Extra CMake options for SDL when vcpkg builds it.
-# Only video + rendering + events are needed for a photo frame.
+# Only video, render and events are needed
 if (PORT STREQUAL "sdl3")
     list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS
             -DSDL_AUDIO=OFF
@@ -12,8 +11,7 @@ if (PORT STREQUAL "sdl3")
 endif ()
 
 if (PORT STREQUAL "sdl3-image")
-    # Formats built into SDL_image that need no extra library.
-    # The ones we use (PNG, JPEG) are controlled by vcpkg features instead.
+    # Built-in formats we don't need
     list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS
             -DSDLIMAGE_BMP=OFF -DSDLIMAGE_GIF=OFF -DSDLIMAGE_LBM=OFF -DSDLIMAGE_PCX=OFF
             -DSDLIMAGE_PNM=OFF -DSDLIMAGE_QOI=OFF -DSDLIMAGE_SVG=OFF -DSDLIMAGE_TGA=OFF

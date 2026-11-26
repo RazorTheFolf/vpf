@@ -1,11 +1,6 @@
 //
 // Created by Razor on 14/10/2026.
 //
-// All log calls (ours AND SDL's internal ones) end up in Output() below,
-// thanks to SDL_SetLogOutputFunction. That gives one consistent format everywhere:
-//
-//   17:25:03.412 INFO  [app] Slideshow with 3 photos
-//
 
 #include "logger.h"
 
@@ -15,11 +10,10 @@
 #include <mutex>
 #include <unistd.h>  // isatty, fileno
 
-// Anonymous namespace = these helpers are private to this file.
 namespace
 {
-    std::mutex logMutex; // several threads log; the lock keeps lines from mixing
-    bool useColor = false; // set once in InitLogging
+    std::mutex logMutex; // Several threads log at once
+    bool useColor = false;
 
     const char* CategoryName(const int category)
     {
@@ -37,7 +31,6 @@ namespace
         }
     }
 
-    // Label and ANSI terminal color for each level.
     void LevelStyle(const SDL_LogPriority priority, const char*& name, const char*& color)
     {
         switch (priority)
@@ -68,7 +61,7 @@ namespace
 
     void Output(void* /*userdata*/, const int category, const SDL_LogPriority priority, const char* message)
     {
-        // SDL_TimeToDateTime is thread-safe, unlike localtime() which shares one buffer.
+        // Thread-safe, unlike localtime()
         SDL_Time now = 0;
         SDL_DateTime dt{};
         SDL_GetCurrentTime(&now);
@@ -90,15 +83,13 @@ namespace
 
 void InitLogging()
 {
-    // Colors only in a real terminal. When output goes to a file or systemd's journal
-    // (on the Pi), escape codes would just show up as garbage.
+    // No colors when piped to a file or journald
     useColor = isatty(fileno(stderr));
 
-    // SDL's own categories: warnings and errors only (hides its startup info lines).
+    // Only warnings and errors from SDL itself
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_WARN);
 
-    // Our categories: everything in Debug builds, info and above in Release.
-    // CMake defines NDEBUG automatically for Release builds.
+    // Debug logs only in Debug builds
 #ifdef NDEBUG
     constexpr SDL_LogPriority ours = SDL_LOG_PRIORITY_INFO;
 #else
@@ -111,8 +102,7 @@ void InitLogging()
 }
 
 // ---- String versions ----
-// Always pass the message through "%s": if it contained a '%' (e.g. a file named
-// "100%_sunset.jpg") and were used as the format itself, it would print garbage or crash.
+// Always go through "%s", a '%' in the message would break the format
 
 void LogDebug(const std::string& msg, LogCat cat)
 {
@@ -135,7 +125,6 @@ void LogError(const std::string& msg, LogCat cat)
 }
 
 // ---- printf versions ----
-// va_start/va_end must be in each function: they read that function's own `...`.
 
 void LogDebugf(LogCat cat, const char* fmt, ...)
 {

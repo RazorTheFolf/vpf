@@ -1,21 +1,18 @@
-# Build environment matching Raspberry Pi OS Bookworm (64-bit).
-# On an Apple Silicon Mac this runs natively (arm64), so builds are fast.
-# The binary built here runs on the Pi because both use Debian 12 and the same glibc.
+# Same Debian and glibc as Raspberry Pi OS Bookworm
 FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        # compilers and tools vcpkg needs
+        # Build tools
         build-essential git curl ca-certificates zip unzip tar pkg-config \
         autoconf automake libtool perl python3 python3-pip linux-libc-dev \
-        # SDL's KMSDRM video driver (draws without a desktop): headers only,
-        # SDL loads the real libraries at runtime on the Pi
+        # KMSDRM headers, draws without a desktop
         libdrm-dev libgbm-dev libegl-dev libgles-dev libudev-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Debian's CMake is too old for recent vcpkg ports: get a current CMake and Ninja.
+# Debian's cmake is too old for vcpkg
 RUN python3 -m pip install --no-cache-dir --break-system-packages cmake ninja
 
-# vcpkg inside the image. On ARM Linux vcpkg must use the system cmake/ninja.
+# vcpkg needs the system cmake/ninja on ARM
 ENV VCPKG_ROOT=/opt/vcpkg \
     VCPKG_FORCE_SYSTEM_BINARIES=1 \
     VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg

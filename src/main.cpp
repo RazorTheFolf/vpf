@@ -1,10 +1,6 @@
-//
-// Entry point. SDL3 "main callbacks" mode: instead of writing our own main
-// loop, SDL calls these four functions for us. Each one just forwards to the
-// App object.
-//
+// SDL calls these, they just forward to App
 
-#define SDL_MAIN_USE_CALLBACKS 1 // must come before including SDL_main.h
+#define SDL_MAIN_USE_CALLBACKS 1 // before SDL_main.h
 #include <SDL3/SDL_main.h>
 
 #include "core/app/app.h"
@@ -28,7 +24,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult /*result*/) {
-  // Always called, even if init failed, so appstate may still be null.
+  // Called even if init failed
   auto *app = static_cast<App *>(appstate);
   if (!app)
     return;

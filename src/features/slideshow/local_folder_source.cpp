@@ -29,26 +29,25 @@ LocalFolderSource::LocalFolderSource(std::string folder) : folder(std::move(fold
 
 void LocalFolderSource::refresh()
 {
-    // Returns names relative to `folder`, in one block that a single SDL_free releases.
     int count = 0;
     char** names = SDL_GlobDirectory(folder.c_str(), nullptr, 0, &count);
     if (!names)
     {
-        // Couldn't read the folder (e.g. USB drive briefly busy): keep the current queue.
+        // Folder busy, keep the current queue
         LogErrorf(LogCat::Image, "Can't list '%s': %s", folder.c_str(), SDL_GetError());
         return;
     }
 
     std::vector<std::string> files;
     for (int i = 0; i < count; i++)
-        if (isPhotoFile(names[i]))  // skips config.yml and anything else
+        if (isPhotoFile(names[i]))
             files.emplace_back(names[i]);
     SDL_free(names);
 
-    std::sort(files.begin(), files.end());  // same order on every run and every OS
+    std::sort(files.begin(), files.end());  // Same order on every OS
     queue.sync(files);
 
-    // Log the first listing, then only real changes: nothing when the folder is unchanged.
+    // Only log the first listing and real changes
     const PlayQueue::Changes changes = queue.lastChanges();
     if (!listedOnce)
         LogInfof(LogCat::Image, "Folder loaded: %zu photos", queue.size());
@@ -64,7 +63,7 @@ SDL_Surface* LocalFolderSource::loadNext()
 
     const std::string file = queue.next();
     if (file.empty())
-        return nullptr;  // folder has no photos
+        return nullptr;
 
     return loadImage((folder + file).c_str());
 }

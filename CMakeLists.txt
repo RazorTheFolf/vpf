@@ -4,9 +4,9 @@ project(vpf VERSION 0.1.0 LANGUAGES CXX)
 # ---- C++ settings ----
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)   # better autocomplete in VS Code / CLion
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ---- Packages (installed by vcpkg from vcpkg.json) ----
+# ---- Packages ----
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(PahoMqttCpp CONFIG REQUIRED)
@@ -14,33 +14,27 @@ find_package(cpr CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 
-# ---- Source files: picks up every .cpp in src/ ----
+# ---- Sources ----
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(vpf ${SOURCES})
 target_include_directories(vpf PRIVATE src)
 
-# ---- Warnings: let the compiler catch bugs early ----
-# -Werror=return-type makes "function doesn't return a value" a build error.
+# ---- Warnings ----
 target_compile_options(vpf PRIVATE -Wall -Wextra -Werror=return-type)
 
 # ---- Link the packages ----
 target_link_libraries(vpf PRIVATE
         SDL3::SDL3
         SDL3_image::SDL3_image
-        # Paho names its target differently for static vs shared builds
+        # Static and shared builds name it differently
         $<IF:$<TARGET_EXISTS:PahoMqttCpp::paho-mqttpp3-static>,PahoMqttCpp::paho-mqttpp3-static,PahoMqttCpp::paho-mqttpp3>
         cpr::cpr
         nlohmann_json::nlohmann_json
         yaml-cpp::yaml-cpp
 )
 
-# ---- Sync assets/ (photos, settings.json) next to the executable ----
-# A custom target with no output file runs on EVERY build, even when no code changed
-# (a POST_BUILD command only runs when the executable is relinked).
-# Deleting first keeps the copy exact: photos removed from assets/ disappear too.
-# Uses CMAKE_BINARY_DIR (where the executable is built) rather than $<TARGET_FILE_DIR:vpf>:
-# referring to vpf here would make sync_assets depend on vpf, and vpf on sync_assets (a cycle).
+# ---- Copy app_config.yml next to the executable ----
 if (EXISTS "${CMAKE_SOURCE_DIR}/assets/app_config.yml")
     add_custom_target(sync_app_config ALL
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

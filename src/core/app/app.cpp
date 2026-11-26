@@ -16,9 +16,7 @@
 
 SDL_AppResult App::init()
 {
-    // Build paths from the executable's folder, not the current working directory,
-    // so the app finds its files no matter where it is launched from.
-    // SDL_GetBasePath can fail (returns nullptr), and std::string(nullptr) would crash.
+    // Paths relative to the executable, not the cwd
     const char* basePath = SDL_GetBasePath();
     if (!basePath)
     {
@@ -26,7 +24,7 @@ SDL_AppResult App::init()
         return SDL_APP_FAILURE;
     }
 
-    LoadConfig(std::string(basePath) + "app_config.yml"); // next to the photos, not the working directory
+    LoadConfig(std::string(basePath) + "app_config.yml");
     const Config& config = GetConfig();
     SDL_SetAppMetadata(config.appName.c_str(), config.appVersion.c_str(), config.appId.c_str());
 
@@ -73,10 +71,10 @@ SDL_AppResult App::init()
 
 SDL_AppResult App::iterate()
 {
-    // 1. Update: let features change their state (e.g. switch photo).
+    // Update
     slideshow.update(ctx.renderer);
 
-    // 2. Draw: App owns the frame (clear + present); features only draw into it.
+    // Draw
     SDL_SetRenderDrawColor(ctx.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(ctx.renderer);
     slideshow.draw(ctx.renderer);
@@ -89,7 +87,7 @@ SDL_AppResult App::iterate()
 SDL_AppResult App::event(const SDL_Event& event)
 {
     if (event.type == SDL_EVENT_QUIT)
-        return SDL_APP_SUCCESS; // window closed: end the program normally
+        return SDL_APP_SUCCESS;
 
     return SDL_APP_CONTINUE;
 }
@@ -97,7 +95,6 @@ SDL_AppResult App::event(const SDL_Event& event)
 
 void App::quit()
 {
-    // Free textures while the renderer still exists: SDL destroys it right after this.
-    // (The Slideshow destructor would also do it, but being explicit about order is clearer.)
+    // Free textures before SDL destroys the renderer
     slideshow.stop();
 }

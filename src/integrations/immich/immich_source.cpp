@@ -19,8 +19,7 @@ void ImmichSource::refresh()
 {
     const std::optional<std::vector<AssetInfo>> assets = client.fetchAlbumAssetsInfo(albumId);
 
-    // No value = the request failed (the client logged why). Keep the current queue
-    // rather than treating "server unreachable" as "every photo was removed".
+    // Request failed, keep the current queue
     if (!assets)
         return;
 
@@ -31,7 +30,7 @@ void ImmichSource::refresh()
 
     queue.sync(ids);
 
-    // Log the first listing, then only real changes: nothing when the album is unchanged.
+    // Only log the first listing and real changes
     const PlayQueue::Changes changes = queue.lastChanges();
     if (!listedOnce)
         LogInfof(LogCat::Immich, "Album loaded: %zu photos", queue.size());
@@ -47,12 +46,11 @@ SDL_Surface* ImmichSource::loadNext()
 
     const std::string id = queue.next();
     if (id.empty())
-        return nullptr;  // album is empty (or was never reachable)
+        return nullptr;
 
     const std::string bytes = client.fetchAsset(id);
     if (bytes.empty())
-        return nullptr;  // fetchAsset already logged the reason
+        return nullptr;
 
-    // The bytes only need to live until decoding is done: the surface has its own copy.
     return decodeImage(bytes.data(), bytes.size(), id.c_str());
 }

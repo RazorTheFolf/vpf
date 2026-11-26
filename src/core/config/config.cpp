@@ -8,9 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 
-// The one and only Config. `static` here means only this file can touch it directly:
-// everyone else goes through GetConfig(), which returns a const reference,
-// so no other part of the app can change the settings by accident.
+// Read-only outside this file, use GetConfig()
 static Config config;
 
 const Config& GetConfig()

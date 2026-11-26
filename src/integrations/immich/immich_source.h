@@ -1,10 +1,6 @@
 //
 // Created by Razor on 15/10/2026.
 //
-// Photos from an Immich album. Before every photo the album is listed again, so
-// photos added in Immich are shown next and removed ones disappear from the queue.
-// Each photo's preview (~1440 px) is downloaded on demand; nothing is stored on disk.
-//
 
 #pragma once
 #include <string>
@@ -22,10 +18,10 @@ public:
     size_t count() const override { return queue.size(); }
 
 private:
-    void refresh();  // list the album and sync the queue
+    void refresh();
 
     ImmichClient client;
     std::string albumId;
-    PlayQueue queue;          // ids are Immich asset ids
-    bool listedOnce = false;  // false until the first successful listing
+    PlayQueue queue;          // Asset ids
+    bool listedOnce = false;
 };
